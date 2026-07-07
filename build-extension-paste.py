@@ -20,6 +20,7 @@ def read(p):
 MANIFEST = read("extension/manifest.json")
 BACKGROUND = read("extension/background.js")
 CONTENT = read("extension/content.js")
+INJECT = read("extension/inject.js")
 
 BLOCK = r'''E="$HOME/CompuOfficeExtension"; mkdir -p "$E"
 cat > "$E/manifest.json" <<'MANIFESTEOF'
@@ -31,6 +32,9 @@ BGEOF
 cat > "$E/content.js" <<'CTEOF'
 @@CONTENT@@
 CTEOF
+cat > "$E/inject.js" <<'INJEOF'
+@@INJECT@@
+INJEOF
 echo "Extension written to: $E"
 
 # Re-authorize the extension in the native host manifests (adds its ID).
@@ -52,5 +56,6 @@ echo "Then fully quit Chrome (Cmd-Q), reopen, and open your CompuOffice site."
 out = (BLOCK
        .replace("@@MANIFEST@@", MANIFEST)
        .replace("@@BACKGROUND@@", BACKGROUND)
-       .replace("@@CONTENT@@", CONTENT))
+       .replace("@@CONTENT@@", CONTENT)
+       .replace("@@INJECT@@", INJECT))
 print(out)
