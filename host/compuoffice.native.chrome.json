@@ -1,9 +1,11 @@
 {
   "name": "compuoffice.native.chrome",
-  "description": "CompuOffice macOS native-messaging bridge",
+  "description": "compuoffice native chrome",
   "path": "__LAUNCHER_PATH__",
   "type": "stdio",
   "allowed_origins": [
-    "chrome-extension://aginpdbdkhdcfgdndhbagboecblnhfgp/"
+    "chrome-extension://ohcokhailmiiebggggbllhllifdldegk/",
+    "chrome-extension://aginpdbdkhdcfgdndhbagboecblnhfgp/",
+    "chrome-extension://pddegllmnldjcaonfinbgaonhfjdbckk/"
   ]
 }

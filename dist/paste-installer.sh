@@ -1,19 +1,5 @@
-#!/bin/sh
-# CompuOffice macOS bridge — self-contained installer.
-# Installs the native-messaging host that answers the CompuTax Chrome extension
-# so it stops reporting an "extension issue" on a Mac. Contains no CompuOffice
-# application code.
-#
-# Run by double-clicking in Finder, or:  sh Install-CompuOffice-Bridge.command
-
-set -e
-INSTALL_DIR="$HOME/Library/Application Support/CompuOfficeBridge"
-mkdir -p "$INSTALL_DIR"
-printf '\n=== CompuOffice macOS bridge installer ===\n\n'
-
-decode() { base64 -D 2>/dev/null || base64 -d; }
-
-cat <<'PYEOF' | decode > "$INSTALL_DIR/launcher.py"
+D="$HOME/Library/Application Support/CompuOfficeBridge"; mkdir -p "$D"
+( base64 -D 2>/dev/null || base64 -d ) > "$D/launcher.py" <<'PYB64'
 IyEvdXNyL2Jpbi9lbnYgcHl0aG9uMwoiIiIKQ29tcHVPZmZpY2UgbWFjT1MgbmF0aXZlLW1lc3NhZ2luZyBob3N0LgoKQSBtYWNP
 UyByZWltcGxlbWVudGF0aW9uIG9mIHRoZSBXaW5kb3dzIGBDb21wdU9mZmljZS5DaHJvbWVOYXRpdmUuZXhlYCAoYnkKUHJvZmVz
 c2lvbmFsIFNvZnRlYyBQdnQuIEx0ZC4pLCByZXZlcnNlLWVuZ2luZWVyZWQgZnJvbSB0aGF0IGJpbmFyeSBzbyB0aGUKQ29tcHVP
@@ -116,53 +102,69 @@ aXZlIG9uIGFueSBzaW5nbGUgYmFkIG1lc3NhZ2UKICAgICAgICAgICAgcmVwbHkgPSB7IlN0YXR1cyI6
 b3IiOiAiaW50ZXJuYWwgZXJyb3I6ICVzIiAlIGV4Y30KICAgICAgICB0cnk6CiAgICAgICAgICAgIHNlbmRfbWVzc2FnZShyZXBs
 eSkKICAgICAgICBleGNlcHQgT1NFcnJvcjoKICAgICAgICAgICAgYnJlYWsKCgppZiBfX25hbWVfXyA9PSAiX19tYWluX18iOgog
 ICAgbWFpbigpCg==
-PYEOF
-cat <<'SHEOF' | decode > "$INSTALL_DIR/launcher.sh"
-IyEvYmluL3NoCiMgV3JhcHBlciB0aGF0IENocm9tZSBsYXVuY2hlcyBhcyB0aGUgbmF0aXZlLW1lc3NhZ2luZyBob3N0LgojCiMg
-Q2hyb21lIHN0YXJ0cyBuYXRpdmUgaG9zdHMgd2l0aCBhIG1pbmltYWwgZW52aXJvbm1lbnQsIHNvIGAjIS91c3IvYmluL2Vudgoj
-IHB5dGhvbjNgIGluIGxhdW5jaGVyLnB5IGlzIG5vdCByZWxpYWJsZSBvbiBpdHMgb3duIOKAlCBQQVRIIG1heSBub3QgY29udGFp
-biB0aGUKIyBweXRob24zIHRoZSB1c2VyIGluc3RhbGxlZC4gVGhpcyB3cmFwcGVyIGxvY2F0ZXMgYSBweXRob24zIGV4cGxpY2l0
-bHkgYW5kCiMgZXhlY3MgdGhlIHJlYWwgaG9zdCB3aXRoIGl0LgoKRElSPSQoY2QgIiQoZGlybmFtZSAiJDAiKSIgJiYgcHdkKQoK
-ZmluZF9weXRob24oKSB7CiAgICBmb3IgYyBpbiBcCiAgICAgICAgL29wdC9ob21lYnJldy9iaW4vcHl0aG9uMyBcCiAgICAgICAg
-L3Vzci9sb2NhbC9iaW4vcHl0aG9uMyBcCiAgICAgICAgL3Vzci9iaW4vcHl0aG9uMyBcCiAgICAgICAgIiQoY29tbWFuZCAtdiBw
-eXRob24zIDI+L2Rldi9udWxsKSIKICAgIGRvCiAgICAgICAgaWYgWyAteCAiJGMiIF07IHRoZW4KICAgICAgICAgICAgZWNobyAi
-JGMiCiAgICAgICAgICAgIHJldHVybiAwCiAgICAgICAgZmkKICAgIGRvbmUKICAgICMgRmFsbCBiYWNrIHRvIHRoZSBYY29kZSBD
-b21tYW5kIExpbmUgVG9vbHMgcHl0aG9uMywgaWYgcHJlc2VudC4KICAgIGlmIC91c3IvYmluL3hjcnVuIC0tZmluZCBweXRob24z
-ID4vZGV2L251bGwgMj4mMTsgdGhlbgogICAgICAgIC91c3IvYmluL3hjcnVuIC0tZmluZCBweXRob24zCiAgICAgICAgcmV0dXJu
-IDAKICAgIGZpCiAgICByZXR1cm4gMQp9CgpQWT0kKGZpbmRfcHl0aG9uKQppZiBbIC16ICIkUFkiIF07IHRoZW4KICAgICMgRW1p
-dCBhIG5hdGl2ZS1tZXNzYWdpbmctZnJhbWVkIGVycm9yIHNvIENocm9tZSBzZWVzIGEgcmVhbCByZXBseSwgbm90IGp1c3QKICAg
-ICMgYSBjcmFzaGVkIGhvc3QuIEZyYW1lID0gNC1ieXRlIGxpdHRsZS1lbmRpYW4gbGVuZ3RoIHByZWZpeCArIEpTT04gYm9keS4K
-ICAgIEJPRFk9J3sib2siOmZhbHNlLCJlcnJvciI6InB5dGhvbjMgbm90IGZvdW5kIG9uIHRoaXMgTWFjLiBJbnN0YWxsIHRoZSBY
-Y29kZSBDb21tYW5kIExpbmUgVG9vbHMgKHhjb2RlLXNlbGVjdCAtLWluc3RhbGwpIG9yIEhvbWVicmV3IHB5dGhvbjMuIn0nCiAg
-ICBMRU49JChwcmludGYgJyVzJyAiJEJPRFkiIHwgd2MgLWMgfCB0ciAtZCAnICcpCiAgICAjIEVuY29kZSB0aGUgNC1ieXRlIGxp
-dHRsZS1lbmRpYW4gbGVuZ3RoIGFzIG9jdGFsIGVzY2FwZXM7IFBPU0lYIHByaW50ZgogICAgIyBzdXBwb3J0cyBcb29vIHBvcnRh
-Ymx5IChkYXNoIGFuZCBtYWNPUyBiYXNoIGJvdGggZG8pLCB1bmxpa2UgXHhISC4KICAgIEIwPSQocHJpbnRmICclMDNvJyAiJCgo
-TEVOICUgMjU2KSkiKQogICAgQjE9JChwcmludGYgJyUwM28nICIkKCgoTEVOIC8gMjU2KSAlIDI1NikpIikKICAgIEIyPSQocHJp
-bnRmICclMDNvJyAiJCgoKExFTiAvIDY1NTM2KSAlIDI1NikpIikKICAgIEIzPSQocHJpbnRmICclMDNvJyAiJCgoKExFTiAvIDE2
-Nzc3MjE2KSAlIDI1NikpIikKICAgIHByaW50ZiAiXFwkQjBcXCRCMVxcJEIyXFwkQjMlcyIgIiRCT0RZIgogICAgIyBBbHNvIGxv
-ZyB0byBzdGRlcnIgc28gaXQgc2hvd3MgaW4gQ2hyb21lJ3MgbmF0aXZlLWhvc3QgbG9ncy4KICAgIGVjaG8gImNvbXB1b2ZmaWNl
-Lm5hdGl2ZS5jaHJvbWU6IHB5dGhvbjMgbm90IGZvdW5kIiA+JjIKICAgIGV4aXQgMQpmaQoKZXhlYyAiJFBZIiAiJERJUi9sYXVu
-Y2hlci5weSIK
-SHEOF
-chmod +x "$INSTALL_DIR/launcher.py" "$INSTALL_DIR/launcher.sh"
-echo "Installed host to: $INSTALL_DIR"
+PYB64
+cat > "$D/launcher.sh" <<'SHEOF'
+#!/bin/sh
+# Wrapper that Chrome launches as the native-messaging host.
+#
+# Chrome starts native hosts with a minimal environment, so `#!/usr/bin/env
+# python3` in launcher.py is not reliable on its own — PATH may not contain the
+# python3 the user installed. This wrapper locates a python3 explicitly and
+# execs the real host with it.
 
-if ! command -v python3 >/dev/null 2>&1 \
-    && [ ! -x /usr/bin/python3 ] && [ ! -x /opt/homebrew/bin/python3 ] \
-    && [ ! -x /usr/local/bin/python3 ]; then
-    echo "NOTE: python3 not found. Install it:  xcode-select --install"
+DIR=$(cd "$(dirname "$0")" && pwd)
+
+find_python() {
+    for c in \
+        /opt/homebrew/bin/python3 \
+        /usr/local/bin/python3 \
+        /usr/bin/python3 \
+        "$(command -v python3 2>/dev/null)"
+    do
+        if [ -x "$c" ]; then
+            echo "$c"
+            return 0
+        fi
+    done
+    # Fall back to the Xcode Command Line Tools python3, if present.
+    if /usr/bin/xcrun --find python3 >/dev/null 2>&1; then
+        /usr/bin/xcrun --find python3
+        return 0
+    fi
+    return 1
+}
+
+PY=$(find_python)
+if [ -z "$PY" ]; then
+    # Emit a native-messaging-framed error so Chrome sees a real reply, not just
+    # a crashed host. Frame = 4-byte little-endian length prefix + JSON body.
+    BODY='{"ok":false,"error":"python3 not found on this Mac. Install the Xcode Command Line Tools (xcode-select --install) or Homebrew python3."}'
+    LEN=$(printf '%s' "$BODY" | wc -c | tr -d ' ')
+    # Encode the 4-byte little-endian length as octal escapes; POSIX printf
+    # supports \ooo portably (dash and macOS bash both do), unlike \xHH.
+    B0=$(printf '%03o' "$((LEN % 256))")
+    B1=$(printf '%03o' "$(((LEN / 256) % 256))")
+    B2=$(printf '%03o' "$(((LEN / 65536) % 256))")
+    B3=$(printf '%03o' "$(((LEN / 16777216) % 256))")
+    printf "\\$B0\\$B1\\$B2\\$B3%s" "$BODY"
+    # Also log to stderr so it shows in Chrome's native-host logs.
+    echo "compuoffice.native.chrome: python3 not found" >&2
+    exit 1
 fi
 
+exec "$PY" "$DIR/launcher.py"
+SHEOF
+chmod +x "$D/launcher.sh" "$D/launcher.py"
 n=0
 for B in "Google/Chrome" "Google/Chrome Beta" "Google/Chrome Canary" "Microsoft Edge" "BraveSoftware/Brave-Browser" "Chromium"; do
-    P="$HOME/Library/Application Support/$B"
-    [ -d "$P" ] || continue
-    mkdir -p "$P/NativeMessagingHosts"
-    cat > "$P/NativeMessagingHosts/compuoffice.native.chrome.json" <<JEOF
+  P="$HOME/Library/Application Support/$B"
+  [ -d "$P" ] || continue
+  mkdir -p "$P/NativeMessagingHosts"
+  cat > "$P/NativeMessagingHosts/compuoffice.native.chrome.json" <<JEOF
 {
   "name": "compuoffice.native.chrome",
   "description": "compuoffice native chrome",
-  "path": "$INSTALL_DIR/launcher.sh",
+  "path": "$D/launcher.sh",
   "type": "stdio",
   "allowed_origins": [
     "chrome-extension://ohcokhailmiiebggggbllhllifdldegk/",
@@ -171,14 +173,8 @@ for B in "Google/Chrome" "Google/Chrome Beta" "Google/Chrome Canary" "Microsoft 
   ]
 }
 JEOF
-    echo "registered for: $B"; n=$((n+1))
+  echo "installed for: $B"; n=$((n+1))
 done
-echo ""
-[ "$n" -eq 0 ] && echo "No Chromium-family browser found. Open Chrome once, then re-run." \
-              || echo "Registered the bridge for $n browser(s)."
+[ "$n" -eq 0 ] && echo "No Chromium-family browser found — open Chrome once, then re-run."
+echo "Bridge installed. Now install the CompuTax extension, then fully quit and reopen Chrome."
 
-printf '\nNext steps:\n'
-printf '  1. Install the CompuTax Chrome extension in Chrome on this Mac.\n'
-printf '  2. Fully quit and reopen Chrome.\n'
-printf '  3. Open your CompuOffice web address as usual.\n\n'
-printf 'Done. You can close this window.\n\n'

@@ -1,58 +1,52 @@
 # CompuOffice macOS bridge
 
-A macOS reimplementation of the Windows **CompuOfficeLauncher /
-`CompuOffice.ChromeNative.exe`** native-messaging bridge, so the CompuOffice /
-CompuTax Chrome extension can talk to a CompuOffice server from a Mac.
+A macOS reimplementation of the Windows **`CompuOffice.ChromeNative.exe`**
+native-messaging host (by Professional Softec Pvt. Ltd.), so the CompuOffice /
+CompuTax Chrome extension works on a Mac instead of failing with an
+"extension issue".
 
-> **Read this first — what this does and does not do.**
-> This project is only the *bridge* between Chrome and a CompuOffice **server**.
-> It does **not** contain, install, or run the CompuOffice/CompuTax application
-> itself. The real application is Windows-only and there is no macOS build of it.
->
-> This bridge is useful in exactly one situation: your office already runs a
-> CompuOffice **server** (on a Windows machine on the LAN, or reachable over the
-> network) that serves its UI over HTTP, and you want to reach it from Chrome on
-> a Mac. The bridge discovers that server and lets the extension open it. If the
-> only copy of CompuOffice is the desktop app on your own Windows PC, running it
-> on a Mac still requires a Windows VM (Parallels/UTM) or CrossOver — see
-> [docs/running-computax-on-mac.md](docs/running-computax-on-mac.md).
+> **What this is / isn't.** This is the small local *helper* the CompuTax
+> extension needs — the Mac equivalent of the Windows `CompuOfficeExt.exe` /
+> `CompuOffice.ChromeNative.exe`. It contains no CompuOffice application code.
+> You still reach your data through your CompuOffice web address (e.g.
+> `yourfirm.compu.tax`) in the browser; this host just answers the extension's
+> local checks and handles saving/printing/opening files.
 
-## Which path do I need?
+## How your setup works
 
-- **I just browse a CompuOffice server that runs on another machine** (office/
-  network server) → **you only need this bridge.** Install it (below) and point
-  it at your server. No Wine, no Docker, no Windows. This is the common case.
-- **There is no server — I need the whole CompuOffice app on my Mac alone** →
-  see [docs/wine-setup-mac.md](docs/wine-setup-mac.md) to run the app under Wine
-  with its database in a container. Heavier, and not vendor-supported.
+CompuTax runs on a machine (your office server), and you use it through Chrome.
+The web page loads its own server address directly — but on startup the CompuTax
+**extension** asks a **native helper** on your computer for its version, a
+presence check, and the machine's MAC address. On Windows that helper is
+`CompuOffice.ChromeNative.exe`. On a Mac there is none, so the page reports an
+"extension issue" and won't run.
 
-## What it is
-
-On Windows, the CompuOffice Chrome extension (id
-`aginpdbdkhdcfgdndhbagboecblnhfgp`) communicates with the local machine through a
-[Chrome Native Messaging](https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging)
-host registered as `compuoffice.native.chrome`. That host discovers the
-CompuOffice server on the LAN (UDP broadcast), checks it is up (HTTP), and opens
-its web UI.
-
-This repo provides the same native-messaging host for macOS:
+This repo is that helper for macOS. Install it, add the extension, and the page
+gets the answers it expects.
 
 | Windows original | This project |
 | --- | --- |
 | `CompuOffice.ChromeNative.exe` | `host/launcher.py` (+ `host/launcher.sh` wrapper) |
-| Registry key `…\NativeMessagingHosts\compuoffice.native.chrome` | `host/compuoffice.native.chrome.json` dropped into each browser's `NativeMessagingHosts` folder |
-| `UDPManager.StartSearch` LAN discovery | `discover_server()` in `launcher.py` |
-| `IsHttpOk` server health check | `http_ok()` in `launcher.py` |
-| `HostDetails` | `host_details()` in `launcher.py` |
+| Registry `…\NativeMessagingHosts\compuoffice.native.chrome` | `host/compuoffice.native.chrome.json` in each browser's `NativeMessagingHosts` folder |
+| actions `version` / `checkextension` / `macaddress` / `selfUpdate` | startup handshake in `handle()` — clears the "extension issue" |
+| actions `savefile` / `runfile` / `printfile` | local file save / open / print in `handle()` |
 
-## Requirements
+The exact protocol is documented in [docs/how-it-works.md](docs/how-it-works.md).
 
-- macOS with Google Chrome (also works with Edge, Brave, Chromium, Chrome
-  Beta/Canary).
-- `python3` — preinstalled via the **Xcode Command Line Tools**. If it is
-  missing, run `xcode-select --install` (or install Homebrew python3).
-- The CompuOffice Chrome extension installed in the browser.
-- A reachable CompuOffice **server** on your network.
+## What you need (three pieces)
+
+1. **This native helper** — install it (below).
+2. **The CompuTax Chrome extension** — installed in Chrome on the Mac (IDs:
+   `ohcokhailmiiebggggbllhllifdldegk`, `aginpdbdkhdcfgdndhbagboecblnhfgp`, or
+   `pddegllmnldjcaonfinbgaonhfjdbckk`; all three are authorized).
+3. **`python3`** — preinstalled via the Xcode Command Line Tools; if missing,
+   run `xcode-select --install`.
+
+Then open your CompuOffice web address in Chrome as usual.
+
+> **Caveat — DSC / USB signature tokens.** If your workflow signs e-returns with
+> a USB DSC token, that hardware is generally Windows-only and this helper does
+> not provide it. Data entry and browsing work; token e-signing may not.
 
 ## Install
 
@@ -69,10 +63,11 @@ through `sh` avoids both problems:
    ```sh
    sh ~/Downloads/Install-CompuOffice-Bridge.command
    ```
-3. Answer the prompts (your CompuOffice server address and port).
+3. When it finishes, install the CompuTax extension and reopen Chrome.
 
-It installs the bridge for every Chromium-family browser on the Mac and writes
-the server config for you.
+It installs the helper for every Chromium-family browser on the Mac. There is no
+server address to configure — the browser loads your CompuOffice web address
+directly.
 
 > Prefer double-clicking? Run this once to make it double-clickable:
 > `chmod +x ~/Downloads/Install-CompuOffice-Bridge.command && xattr -d com.apple.quarantine ~/Downloads/Install-CompuOffice-Bridge.command`
@@ -93,34 +88,21 @@ The installer writes the host manifest into every Chromium-family browser it
 finds under `~/Library/Application Support`, substituting the absolute path to
 `host/launcher.sh`. Fully quit and reopen the browser afterwards.
 
-### Point it at your server
-
-If your CompuOffice server is **not** on `localhost`, or does not answer UDP
-discovery, tell the bridge where it is:
-
-```sh
-cp host/config.example.json host/config.json
-# then edit host/config.json — set server_host and server_port
-```
-
-See [host/config.example.json](host/config.example.json) for every option.
-
 ## Uninstall
 
 ```sh
 ./uninstall-macos.sh
 ```
 
-## How the protocol works / adapting to the real extension
+## How the protocol works
 
-The native-messaging wire format and the request dispatch are documented in
-[docs/how-it-works.md](docs/how-it-works.md). Because CompuOffice's extension is
-closed-source, the exact JSON message *schema* the extension sends may differ
-from the generic actions implemented here (`hostdetails`, `discover`, `check`,
-`open`). The handler is written so those message names are easy to adjust — see
-`handle()` in `host/launcher.py`. If you can capture the messages the real
-extension sends (Chrome ▸ extension ▸ *Inspect service worker* ▸ Console), map
-them onto the actions in `handle()`.
+The wire format and every action/response are documented in
+[docs/how-it-works.md](docs/how-it-works.md). The host is a faithful
+reimplementation of the Windows `CompuOffice.ChromeNative.exe`, so the responses
+match what the extension expects. The startup handshake (`version`,
+`checkextension`, `macaddress`, `selfUpdate`) is what clears the "extension
+issue"; the file actions (`savefile`, `runfile`, `printfile`) save/open/print to
+the Desktop.
 
 ## Testing without a browser
 
@@ -131,10 +113,10 @@ python3 - <<'PY'
 import struct, json, subprocess
 def frame(o): b=json.dumps(o).encode(); return struct.pack("<I", len(b)) + b
 p = subprocess.run(["python3", "host/launcher.py"],
-                   input=frame({"action": "discover"}),
+                   input=frame({"action": "version", "ID": 1}),
                    capture_output=True)
 d = p.stdout; (n,) = struct.unpack("<I", d[:4])
-print(json.loads(d[4:4+n].decode()))
+print(json.loads(d[4:4+n].decode()))   # -> {"Status":"Success","action":"version",...}
 PY
 ```
 
