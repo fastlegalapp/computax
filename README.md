@@ -47,6 +47,22 @@ This repo provides the same native-messaging host for macOS:
 
 ## Install
 
+### Easiest: one downloadable file (no Terminal, no git)
+
+Download **[`dist/Install-CompuOffice-Bridge.command`](dist/Install-CompuOffice-Bridge.command)**,
+then **double-click it** in Finder. It installs the whole bridge for every
+Chromium-family browser on the Mac.
+
+The first time, macOS Gatekeeper may block an unsigned downloaded script. If it
+does: **right-click the file ▸ Open ▸ Open**, or run
+`xattr -d com.apple.quarantine ~/Downloads/Install-CompuOffice-Bridge.command`
+once, then double-click.
+
+This file is self-contained (the launcher is embedded inside it) and is
+regenerated from source with `python3 build-installer.py`.
+
+### Or from a clone
+
 ```sh
 git clone https://github.com/fastlegalapp/computax.git
 cd computax

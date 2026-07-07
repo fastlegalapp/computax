@@ -43,7 +43,12 @@ $SUPPORT/BraveSoftware/Brave-Browser/NativeMessagingHosts
 "
 
 installed=0
+# Split on newlines only: the paths contain a space ("Application Support").
+OLDIFS=$IFS
+IFS='
+'
 for target in $TARGETS; do
+    [ -n "$target" ] || continue
     parent=$(dirname "$target")
     # Only install for browsers that are actually present on this Mac.
     if [ ! -d "$parent" ]; then
@@ -55,6 +60,7 @@ for target in $TARGETS; do
     echo "installed: $target/$HOST_NAME.json"
     installed=$((installed + 1))
 done
+IFS=$OLDIFS
 
 if [ "$installed" -eq 0 ]; then
     echo "No Chromium-family browser profile found under \"$SUPPORT\"." >&2

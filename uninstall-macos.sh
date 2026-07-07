@@ -14,7 +14,12 @@ $SUPPORT/BraveSoftware/Brave-Browser/NativeMessagingHosts
 "
 
 removed=0
+# Split on newlines only: the paths contain a space ("Application Support").
+OLDIFS=$IFS
+IFS='
+'
 for target in $TARGETS; do
+    [ -n "$target" ] || continue
     f="$target/$HOST_NAME.json"
     if [ -f "$f" ]; then
         rm -f "$f"
@@ -22,6 +27,7 @@ for target in $TARGETS; do
         removed=$((removed + 1))
     fi
 done
+IFS=$OLDIFS
 
 if [ "$removed" -eq 0 ]; then
     echo "Nothing to remove; no manifests found."
