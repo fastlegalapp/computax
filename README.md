@@ -56,16 +56,27 @@ This repo provides the same native-messaging host for macOS:
 
 ## Install
 
-### Easiest: one downloadable file (no Terminal, no git)
+### Easiest: one downloadable file
 
 Download **[`dist/Install-CompuOffice-Bridge.command`](dist/Install-CompuOffice-Bridge.command)**,
-then **double-click it** in Finder. It installs the whole bridge for every
-Chromium-family browser on the Mac.
+then run it once from Terminal. Downloaded `.command` files lose their
+executable bit and are quarantined by Gatekeeper, so **double-clicking them
+fails with "you do not have appropriate access privileges."** Running them
+through `sh` avoids both problems:
 
-The first time, macOS Gatekeeper may block an unsigned downloaded script. If it
-does: **right-click the file ▸ Open ▸ Open**, or run
-`xattr -d com.apple.quarantine ~/Downloads/Install-CompuOffice-Bridge.command`
-once, then double-click.
+1. Open **Terminal** (⌘Space → type `Terminal` → Enter).
+2. Type `sh` and a space, drag the downloaded file into the window, press Enter:
+   ```sh
+   sh ~/Downloads/Install-CompuOffice-Bridge.command
+   ```
+3. Answer the prompts (your CompuOffice server address and port).
+
+It installs the bridge for every Chromium-family browser on the Mac and writes
+the server config for you.
+
+> Prefer double-clicking? Run this once to make it double-clickable:
+> `chmod +x ~/Downloads/Install-CompuOffice-Bridge.command && xattr -d com.apple.quarantine ~/Downloads/Install-CompuOffice-Bridge.command`
+> then right-click ▸ Open ▸ Open.
 
 This file is self-contained (the launcher is embedded inside it) and is
 regenerated from source with `python3 build-installer.py`.
