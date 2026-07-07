@@ -1,0 +1,9 @@
+# User-local bridge configuration (created from host/config.example.json)
+host/config.json
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
