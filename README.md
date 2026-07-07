@@ -17,6 +17,15 @@ CompuTax Chrome extension can talk to a CompuOffice server from a Mac.
 > on a Mac still requires a Windows VM (Parallels/UTM) or CrossOver — see
 > [docs/running-computax-on-mac.md](docs/running-computax-on-mac.md).
 
+## Which path do I need?
+
+- **I just browse a CompuOffice server that runs on another machine** (office/
+  network server) → **you only need this bridge.** Install it (below) and point
+  it at your server. No Wine, no Docker, no Windows. This is the common case.
+- **There is no server — I need the whole CompuOffice app on my Mac alone** →
+  see [docs/wine-setup-mac.md](docs/wine-setup-mac.md) to run the app under Wine
+  with its database in a container. Heavier, and not vendor-supported.
+
 ## What it is
 
 On Windows, the CompuOffice Chrome extension (id
