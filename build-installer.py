@@ -66,7 +66,8 @@ for B in "Google/Chrome" "Google/Chrome Beta" "Google/Chrome Canary" "Microsoft 
   "allowed_origins": [
     "chrome-extension://ohcokhailmiiebggggbllhllifdldegk/",
     "chrome-extension://aginpdbdkhdcfgdndhbagboecblnhfgp/",
-    "chrome-extension://pddegllmnldjcaonfinbgaonhfjdbckk/"
+    "chrome-extension://pddegllmnldjcaonfinbgaonhfjdbckk/",
+    "chrome-extension://ikeipdbjlaejlcjldjjhlpdnhlehmdap/"
   ]
 }
 JEOF

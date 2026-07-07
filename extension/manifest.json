@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "CompuOffice Bridge (macOS compat)",
+  "version": "1.0.9202.22305",
+  "description": "Compatibility bridge so the CompuOffice/CompuTax web app can reach the macOS native helper. Independent interoperability tool; contains no CompuOffice code.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvlTCGOaEsZZvDF9HKV6d3LaJp3d/fDe57GAgf9G5guWe5GJTIKlRSlVdf3QM0SvKM6YjQ2M/QVEbEAuOrqT6nNyc4cM67hgGE7zDK1XJFhoFa+SlVLwJUPIYquRoj3RO2cNq4BBnCb+xDJHUQPSUZZ+L3mWId+mN8vyL4GUylrdebmVze9DsHT9LEtLmfqiochxCNBQqvavOLi6FbtJWdaXmb/p1IyFDWJ6lpzkutB+aGd2+oT4wkh1v+u/bbfKX6v0wUZajoBuzcRgQntw5ooEsH9q4G2tZ2hauBujvfglEAuazBe/s0ewvPGCMFHCHvZueRmsaYt1gEhupPPZy8wIDAQAB",
+  "minimum_chrome_version": "88",
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["*://*.compu.tax/*", "*://localhost/*", "*://127.0.0.1/*"],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "externally_connectable": { "matches": ["*://*.compu.tax/*"] },
+  "permissions": ["nativeMessaging"],
+  "host_permissions": ["*://*.compu.tax/*", "*://localhost/*", "*://127.0.0.1/*"]
+}
