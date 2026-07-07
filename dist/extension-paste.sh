@@ -237,8 +237,14 @@ for B in "Google/Chrome" "Google/Chrome Beta" "Microsoft Edge" "BraveSoftware/Br
 JEOF
   echo "re-authorized: $B"
 done
+# If a copy was loaded from Downloads, update it too (that is what Chrome runs).
+if [ -d "$HOME/Downloads/CompuOfficeExtension" ]; then
+  cp -f "$E"/manifest.json "$E"/background.js "$E"/content.js "$E"/inject.js "$HOME/Downloads/CompuOfficeExtension/"
+  echo "Updated the Downloads copy too."
+fi
 echo ""
-echo "Now: Chrome -> chrome://extensions -> turn on Developer mode ->"
-echo "Load unpacked -> choose the folder:  $E"
-echo "Then fully quit Chrome (Cmd-Q), reopen, and open your CompuOffice site."
+echo "Now in Chrome: chrome://extensions -> click the RELOAD (circular arrow)"
+echo "icon on 'CompuOffice Bridge'. If not loaded yet: Developer mode ON ->"
+echo "Load unpacked -> choose:  $E"
+echo "Then reload your CompuOffice tab (Cmd-R)."
 
