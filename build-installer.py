@@ -143,13 +143,43 @@ else
     echo "Registered the bridge for $installed browser(s)."
 fi
 
+# --- 3b. point the bridge at your CompuOffice server --------------------------
+# Your app/database/data are on another machine; tell the bridge where that
+# server is, so Chrome on this Mac can reach it. Written to config.json.
+printf '\n--- Connect to your CompuOffice server ---\n'
+printf 'On the PC where CompuOffice works, the Chrome address bar shows something\n'
+printf 'like  http://SERVER-NAME:PORT  when it is open. Enter those below.\n\n'
+
+SERVER=""
+PORT=""
+printf 'Server name or IP (blank = auto-detect on this network): '
+read -r SERVER || SERVER=""
+if [ -n "$SERVER" ]; then
+    printf 'Server port (blank = 8080): '
+    read -r PORT || PORT=""
+    [ -n "$PORT" ] || PORT="8080"
+    cat > "$INSTALL_DIR/config.json" <<CFGJSON
+{
+  "server_host": "$SERVER",
+  "server_port": $PORT
+}
+CFGJSON
+    echo "Saved: bridge will use http://$SERVER:$PORT"
+else
+    echo "No server entered — the bridge will try to auto-detect it on your network."
+    echo "You can set it later by editing:"
+    echo "  $INSTALL_DIR/config.json"
+fi
+
 # --- 4. next steps ------------------------------------------------------------
 printf '\nNext steps:\n'
-printf '  1. Install the CompuOffice Chrome extension (id %s).\n' "$EXT_ID"
-printf '  2. If your CompuOffice server is NOT on this Mac, set its address:\n'
-printf '       cp "%s/config.example.json" "%s/config.json"\n' "$INSTALL_DIR" "$INSTALL_DIR"
-printf '     then edit config.json and set server_host / server_port.\n'
-printf '  3. Fully quit and reopen Chrome.\n\n'
+printf '  1. Install the CompuOffice Chrome extension (id %s)\n' "$EXT_ID"
+printf '     in Chrome on this Mac.\n'
+printf '  2. Fully quit and reopen Chrome.\n'
+printf '  3. Open CompuOffice the same way you do on the PC.\n\n'
+printf 'Tip: you can often just open  http://<your-server>:<port>  directly in\n'
+printf 'Chrome on this Mac. Try that first — if it works, you may not even need\n'
+printf 'the extension.\n\n'
 printf 'To uninstall: delete the files named %s.json from each browser'"'"'s\n' "$HOST_NAME"
 printf 'NativeMessagingHosts folder, and remove %s\n\n' "$INSTALL_DIR"
 
