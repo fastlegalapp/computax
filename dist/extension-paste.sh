@@ -126,19 +126,88 @@ cat > "$E/content.js" <<'CTEOF'
       });
     }
 
-    // Everything else: relay to the native helper and adapt the reply so the
+    // File actions (savefile / runfile / printfile): CompuOffice hands us a
+    // document (Word/PDF/etc.) to save. On Windows the native host writes/opens
+    // it; on the Mac we save it straight to the Downloads folder via a normal
+    // browser download.
+    if (action === "savefile" || action === "runfile" || action === "printfile") {
+      try { log("file action keys:", Object.keys(msg || {})); } catch (e) {}
+      var b64 = firstDefined(msg, ["fileB64", "FileB64", "filedata", "fileData",
+                                   "data", "content", "base64", "fileBase64"]);
+      var name = firstDefined(msg, ["fileName", "FileName", "filename", "name"]) || "CompuOffice_download";
+      var url = firstDefined(msg, ["url", "URL", "fileUrl", "fileArgs", "href", "path"]);
+      var done = triggerDownload(name, b64, url);
+      if (done) {
+        var okr = { status: "ok", result: "Response", response: { status: "ok", output: name } };
+        log("download started:", name);
+        return Promise.resolve(okr);
+      }
+      // Nothing downloadable found — fall through to the native helper and log
+      // the keys so we can see the real field names.
+      log("no file data found for", action, "— relaying to native helper");
+    }
+
+    // Anything else: relay to the native helper and adapt the reply so the
     // page's handlers (which read response.response.output) find what they want.
     return native(msg).then(function (nat) {
-      if (!nat) return { status: "error", error: "native helper not reachable" };
+      if (!nat) return { status: "ok", result: "Response", response: { status: "ok", output: "" } };
       var out = { status: "ok", raw: nat };
       var output = (nat.Output !== undefined) ? nat.Output
                  : (nat.output !== undefined) ? nat.output : undefined;
       out.response = { output: output, status: "ok" };
-      // also surface common fields at top level
       if (nat.MacAddress || nat.macAddress) out.macAddress = nat.MacAddress || nat.macAddress;
       if (nat.Version) out.version = nat.Version;
       return out;
     });
+  }
+
+  function firstDefined(obj, keys) {
+    for (var i = 0; i < keys.length; i++) {
+      var v = obj && obj[keys[i]];
+      if (v !== undefined && v !== null && v !== "") return v;
+    }
+    return undefined;
+  }
+
+  var MIME = {
+    pdf: "application/pdf", doc: "application/msword",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    xls: "application/vnd.ms-excel",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    xml: "application/xml", txt: "text/plain", csv: "text/csv", zip: "application/zip",
+    rtf: "application/rtf", html: "text/html", htm: "text/html"
+  };
+  function mimeFor(name) {
+    var m = String(name).toLowerCase().match(/\.([a-z0-9]+)\s*$/);
+    return (m && MIME[m[1]]) || "application/octet-stream";
+  }
+
+  // Trigger a browser download from base64 data (preferred) or a URL.
+  // Returns true if a download was started.
+  function triggerDownload(name, b64, url) {
+    try {
+      var href;
+      if (b64) {
+        href = (String(b64).indexOf("data:") === 0)
+             ? b64
+             : ("data:" + mimeFor(name) + ";base64," + String(b64).replace(/\s/g, ""));
+      } else if (url && /^https?:|^data:|^blob:/.test(String(url))) {
+        href = url;
+      } else {
+        return false;
+      }
+      var a = document.createElement("a");
+      a.href = href;
+      a.download = name || "";
+      a.style.display = "none";
+      (document.body || document.documentElement).appendChild(a);
+      a.click();
+      setTimeout(function () { try { a.remove(); } catch (e) {} }, 1000);
+      return true;
+    } catch (e) {
+      log("download error:", String(e));
+      return false;
+    }
   }
 
   window.addEventListener("message", function (ev) {
@@ -171,6 +240,20 @@ cat > "$E/inject.js" <<'INJEOF'
   var seq = 0;
   var pending = {};
 
+  // Messages from the page may contain functions (e.g. a payload.callback).
+  // Those cannot be structured-cloned through postMessage, so build a
+  // JSON-safe copy, dropping any properties that are not cloneable.
+  function sanitize(o) {
+    try { return JSON.parse(JSON.stringify(o)); } catch (e) {}
+    var out = {};
+    for (var k in o) {
+      if (!Object.prototype.hasOwnProperty.call(o, k)) continue;
+      if (typeof o[k] === "function") continue;
+      try { JSON.stringify(o[k]); out[k] = o[k]; } catch (e2) {}
+    }
+    return out;
+  }
+
   window.addEventListener("message", function (ev) {
     if (ev.source !== window) return;
     var d = ev.data;
@@ -199,7 +282,7 @@ cat > "$E/inject.js" <<'INJEOF'
         var id = ++seq;
         if (cb) pending[id] = cb;
         try { console.log("[CO-INJECT] intercepted sendMessage ->", message && message.action); } catch (e) {}
-        window.postMessage({ __coBridge: "req", id: id, message: message }, "*");
+        window.postMessage({ __coBridge: "req", id: id, message: sanitize(message) }, "*");
         return true;
       }
       if (orig) return orig.apply(rt, args);

@@ -17,6 +17,20 @@
   var seq = 0;
   var pending = {};
 
+  // Messages from the page may contain functions (e.g. a payload.callback).
+  // Those cannot be structured-cloned through postMessage, so build a
+  // JSON-safe copy, dropping any properties that are not cloneable.
+  function sanitize(o) {
+    try { return JSON.parse(JSON.stringify(o)); } catch (e) {}
+    var out = {};
+    for (var k in o) {
+      if (!Object.prototype.hasOwnProperty.call(o, k)) continue;
+      if (typeof o[k] === "function") continue;
+      try { JSON.stringify(o[k]); out[k] = o[k]; } catch (e2) {}
+    }
+    return out;
+  }
+
   window.addEventListener("message", function (ev) {
     if (ev.source !== window) return;
     var d = ev.data;
@@ -45,7 +59,7 @@
         var id = ++seq;
         if (cb) pending[id] = cb;
         try { console.log("[CO-INJECT] intercepted sendMessage ->", message && message.action); } catch (e) {}
-        window.postMessage({ __coBridge: "req", id: id, message: message }, "*");
+        window.postMessage({ __coBridge: "req", id: id, message: sanitize(message) }, "*");
         return true;
       }
       if (orig) return orig.apply(rt, args);
